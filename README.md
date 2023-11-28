@@ -1,15 +1,4 @@
 # Train and Test
-### Download OpenIllumilation Dataset
-   
-Take the website of OpenIllumination as the [overview](https://oppo-us-research.github.io/OpenIllumination/) to select object to download.
-```bash
-# Update huggingface_hub package
-pip install --upgrade huggingface_hub
-
-# Change the `--obj_id` with the Object ID. 
-# Change the `--local_dir` with target direction 
-python open_illumination.py --light lighting_patterns --obj_id 2 --local_dir /home/ubuntu/instant-nsr-pl/load
-```
 
 ### Train the model
 
@@ -29,14 +18,27 @@ python launch.py --config path/to/your/exp/config/parsed.yaml --resume path/to/y
 ```
 
 # Environment Setting
-
+### Download Code
 ```bash
 # Download code
 git clone https://github.com/Brack-Wang/instant-nsr-pl.git
 cd instant-nsr-pl
 mkdir load
 
-# Create environment
+```
+### Download OpenIllumilation Dataset
+   
+Take the website of OpenIllumination as the [overview](https://oppo-us-research.github.io/OpenIllumination/) to select object to download.
+```bash
+# Update huggingface_hub package
+pip install --upgrade huggingface_hub
+
+# Change the `--obj_id` with the Object ID. 
+# Change the `--local_dir` with target direction 
+python open_illumination.py --light lighting_patterns --obj_id 2 --local_dir /home/ubuntu/instant-nsr-pl/load
+```
+### Create environment
+```bash
 conda create -n nsrpl python=3.8
 conda activate nsrpl
 
@@ -48,11 +50,9 @@ pip install git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/to
 pip install -r requirements.txt
 pip install https://github.com/zju3dv/Wis3D/releases/download/2.0.0/wis3d-2.0.0-py3-none-any.whl
 pip install "git+https://github.com/facebookresearch/pytorch3d.git"
-
 ```
 
-
-## Useful Command
+# Useful Command
 
 ```bash
 # copy folder from server to local

@@ -11,7 +11,7 @@ dataset:
   #   - 2656
   #   - 3984
   img_downscale: 2 # specify training image size by either img_wh or img_downscale
-  lightid: 013 # specify lighting condition
+  lightid: 008 # specify lighting condition
 
   near_plane: 0.3
   far_plane: 2.0

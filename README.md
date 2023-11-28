@@ -32,7 +32,7 @@ python launch.py --config path/to/your/exp/config/parsed.yaml --resume path/to/y
 
 ```bash
 # Download code
-git clone https://github.com/ootts/instant-nsr-pl.git
+git clone https://github.com/Brack-Wang/instant-nsr-pl.git
 cd instant-nsr-pl
 mkdir load
 
@@ -56,7 +56,8 @@ pip install "git+https://github.com/facebookresearch/pytorch3d.git"
 
 
 
-# Instant Neural Surface Reconstruction
+# Original Instruction 
+## Instant Neural Surface Reconstruction
 
 This repository contains a concise and extensible implementation of NeRF and NeuS for neural surface reconstruction based on Instant-NGP and the Pytorch-Lightning framework. **Training on a NeRF-Synthetic scene takes ~5min for NeRF and ~10min for NeuS on a single RTX3090.**
 

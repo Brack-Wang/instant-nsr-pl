@@ -15,8 +15,8 @@ python open_illumination.py --light lighting_patterns --obj_id 2 --local_dir /ho
 
 ```bash
 conda activate nsrpl
-
-# In configs/openill/nerf-oppo_r0.5.yaml, change the `root_dir`, `img_downscale`, `lightid`
+# change the `dataset.scene` in the command
+# In ./configs/openill/nerf-oppo_r0.5.yaml, change the `root_dir`, `img_downscale`(suggest 2), `lightid`
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example
 
 ```
@@ -28,7 +28,7 @@ The training procedure are by default followed by testing, which computes metric
 python launch.py --config path/to/your/exp/config/parsed.yaml --resume path/to/your/exp/ckpt/epoch=0-step=20000.ckpt --gpu 0 --test
 ```
 
-## Environment Setting
+# Environment Setting
 
 ```bash
 # Download code
@@ -52,7 +52,16 @@ pip install "git+https://github.com/facebookresearch/pytorch3d.git"
 ```
 
 
+## Useful Command
 
+```bash
+# copy folder from server to local
+ssh {root_name}@{IP_address}:/{source_folder_path} {local_path}
+# copy folder from server to local
+ssh {local_path} {root_name}@{IP_address}:/{source_folder_path} 
+
+
+```
 
 
 

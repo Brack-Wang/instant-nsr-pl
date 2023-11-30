@@ -39,14 +39,28 @@ python open_illumination.py --light lighting_patterns --obj_id 2 --local_dir /ho
 ```
 ### Create environment
 ```bash
+# Update sudo
+sudo apt-get update
+sudo apt update
+
+# Install Anaconda
+wget https://repo.anaconda.com/archive/Anaconda3-2023.03-Linux-x86_64.sh
+sh Anaconda3-2023.03-Linux-x86_64.sh
+export PATH=/home/anaconda3/bin:$PATH
+source ~/.bashrc
+
+# Create conda environment
 conda create -n nsrpl python=3.8
 conda activate nsrpl
 
+# Install pytorch
 pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113
 
+# Install tinycudann
 export CUDA_HOME=/usr/local/cuda
 pip install git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
 
+# Install wis3d and pytorch3d
 pip install -r requirements.txt
 pip install https://github.com/zju3dv/Wis3D/releases/download/2.0.0/wis3d-2.0.0-py3-none-any.whl
 pip install "git+https://github.com/facebookresearch/pytorch3d.git"

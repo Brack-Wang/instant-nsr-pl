@@ -64,6 +64,9 @@ pip install git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/to
 pip install -r requirements.txt
 pip install https://github.com/zju3dv/Wis3D/releases/download/2.0.0/wis3d-2.0.0-py3-none-any.whl
 pip install "git+https://github.com/facebookresearch/pytorch3d.git"
+
+# Check whether CUDA tookit installed, If not just install as recommanded
+nvcc -V
 ```
 
 # Useful Command

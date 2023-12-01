@@ -73,9 +73,9 @@ nvcc -V
 
 ```bash
 # copy folder from server to local
-ssh {root_name}@{IP_address}:/{source_folder_path} {local_path}
+scp -r {root_name}@{IP_address}:/{source_folder_path} {local_path}
 # copy folder from server to local
-ssh {local_path} {root_name}@{IP_address}:/{source_folder_path} 
+scp -r {local_path} {root_name}@{IP_address}:/{source_folder_path} 
 
 
 ```

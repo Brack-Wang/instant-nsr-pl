@@ -8,6 +8,8 @@ conda activate nsrpl
 # In ./configs/openill/nerf-oppo_r0.5.yaml, change the `root_dir`, `img_downscale`(suggest 2), `lightid`
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example
 
+# Load checkpoint
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume pth_to_ckpt --resume_weights_only
 ```
 
 ### Testing

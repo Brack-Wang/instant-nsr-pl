@@ -11,6 +11,7 @@ def main():
     parser.add_argument('--config', required=True, help='path to config file')
     parser.add_argument('--gpu', default='0', help='GPU(s) to be used')
     parser.add_argument('--resume', default=None, help='path to the weights to be resumed')
+    parser.add_argument('--lightid', default=None, help='lighting condition')
     parser.add_argument(
         '--resume_weights_only',
         action='store_true',
@@ -63,6 +64,8 @@ def main():
         config.seed = int(time.time() * 1000) % 1000
     pl.seed_everything(config.seed)
 
+    config['model']['lightid'] = args.lightid
+    config['dataset']['lightid'] = args.lightid
     dm = datasets.make(config.dataset.name, config.dataset)
     system = systems.make(config.system.name, config, load_from_checkpoint=None if not args.resume_weights_only else args.resume)
 

@@ -6,10 +6,15 @@
 conda activate nsrpl
 # change the `dataset.scene` in the command
 # In ./configs/openill/nerf-oppo_r0.5.yaml, change the `root_dir`, `img_downscale`(suggest 2), `lightid`
-python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid 1
+
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid 4
 
 # Load checkpoint
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume pth_to_ckpt --resume_weights_only
+
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train1_2500/ckpt/epoch=0-step=2501.ckpt --resume_weights_only --lightid 4
+
 ```
 
 ### Testing
@@ -17,6 +22,9 @@ The training procedure are by default followed by testing, which computes metric
 
 ```bash
 python launch.py --config path/to/your/exp/config/parsed.yaml --resume path/to/your/exp/ckpt/epoch=0-step=20000.ckpt --gpu 0 --test
+
+
+python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/baseline/train4_2500/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/baseline/train1_4_2500/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid 4
 ```
 
 # Environment Setting

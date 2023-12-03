@@ -15,6 +15,13 @@ from nerfacc import ContractionType, OccupancyGrid, ray_marching, render_weight_
 class NeRFModel(BaseModel):
     def setup(self):
         self.geometry = models.make(self.config.geometry.name, self.config.geometry)
+        self.frozen = False
+
+        # Freeze geometry parameters
+        if self.frozen == True:
+            print("frozen geometry")
+            for param in self.geometry.parameters():
+                param.requires_grad = False
         self.texture = models.make(self.config.texture.name, self.config.texture)
         self.register_buffer('scene_aabb', torch.as_tensor([-self.config.radius, -self.config.radius, -self.config.radius, self.config.radius, self.config.radius, self.config.radius], dtype=torch.float32))
 
@@ -43,6 +50,11 @@ class NeRFModel(BaseModel):
         self.background_color = None
 
     def update_step(self, epoch, global_step):
+        # Freeze geometry parameters
+        if self.frozen == True:
+            for param in self.geometry.parameters():
+                param.requires_grad = False
+            
         update_module_step(self.geometry, epoch, global_step)
         update_module_step(self.texture, epoch, global_step)
 
@@ -100,7 +112,7 @@ class NeRFModel(BaseModel):
         intervals = t_ends - t_starts
         if positions.shape[0] != 0:
             density, feature = self.geometry(positions)
-            rgb = self.texture(feature, t_dirs)
+            rgb = self.texture(feature, t_dirs, self.config.lightid)
         else:
             density = torch.zeros(0, device=positions.device)
             rgb = torch.zeros(0, 3, device=positions.device)

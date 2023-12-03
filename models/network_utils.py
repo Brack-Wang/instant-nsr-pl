@@ -88,8 +88,12 @@ def get_encoding(n_input_dims, config):
         encoding = ProgressiveBandHashGrid(n_input_dims, config_to_primitive(config))
     else:
         with torch.cuda.device(get_rank()):
+            print("config_to_primitive(config): ", config_to_primitive(config))
             encoding = tcnn.Encoding(n_input_dims, config_to_primitive(config))
+    print("encoding: ", encoding.shape)
     encoding = CompositeEncoding(encoding, include_xyz=config.get('include_xyz', False), xyz_scale=2., xyz_offset=-1.)
+    print("encoding: ", encoding.shape)
+
     return encoding
 
 

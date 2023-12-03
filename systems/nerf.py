@@ -136,7 +136,7 @@ class NeRFSystem(BaseSystem):
         out = self(batch)
         psnr = self.criterions['psnr'](out['comp_rgb'].to(batch['rgb']), batch['rgb'])
         W, H = self.dataset.img_wh
-        self.save_image_grid(f"it{self.global_step}-{batch['index'][0].item()}.png", [
+        self.save_image_grid(f"lighting{self.config.model.lightid}-it{self.global_step}-{batch['index'][0].item()}.png", [
             {'type': 'rgb', 'img': batch['rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'rgb', 'img': out['comp_rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'grayscale', 'img': out['depth'].view(H, W), 'kwargs': {}},
@@ -172,7 +172,7 @@ class NeRFSystem(BaseSystem):
         out = self(batch)
         psnr = self.criterions['psnr'](out['comp_rgb'].to(batch['rgb']), batch['rgb'])
         W, H = self.dataset.img_wh
-        self.save_image_grid(f"it{self.global_step}-test/{batch['index'][0].item()}.png", [
+        self.save_image_grid(f"lighting{self.config.model.lightid}-it{self.global_step}-test/{batch['index'][0].item()}.png", [
             {'type': 'rgb', 'img': batch['rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'rgb', 'img': out['comp_rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'grayscale', 'img': out['depth'].view(H, W), 'kwargs': {}},
@@ -199,8 +199,8 @@ class NeRFSystem(BaseSystem):
             self.log('test/psnr', psnr, prog_bar=True, rank_zero_only=True)
 
             self.save_img_sequence(
-                f"it{self.global_step}-test",
-                f"it{self.global_step}-test",
+                f"lighting{self.config.model.lightid}-it{self.global_step}-test",
+                f"lighting{self.config.model.lightid}-it{self.global_step}-test",
                 '(\d+)\.png',
                 save_format='mp4',
                 fps=30
@@ -211,6 +211,6 @@ class NeRFSystem(BaseSystem):
     def export(self):
         mesh = self.model.export(self.config.export)
         self.save_mesh(
-            f"it{self.global_step}-{self.config.model.geometry.isosurface.method}{self.config.model.geometry.isosurface.resolution}.obj",
+            f"lighting{self.config.model.lightid}-it{self.global_step}-{self.config.model.geometry.isosurface.method}{self.config.model.geometry.isosurface.resolution}.obj",
             **mesh
         )

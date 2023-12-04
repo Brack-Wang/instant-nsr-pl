@@ -22,10 +22,11 @@ dataset:
 model:
   name: nerf
   radius: 0.5
+  geometry_frozen: True
   lightid: 0
   num_samples_per_ray: 1024
   # num_samples_per_ray: 1024
-  train_num_rays: 256
+  train_num_rays: 512
   max_train_num_rays: 8192
   grid_prune: true
   dynamic_ray_sampling: true

@@ -98,10 +98,12 @@ class NeRFSystem(BaseSystem):
         loss += loss_rgb * self.C(self.config.system.loss.lambda_rgb)
 
         device = out['light_id_matrix'].device  
-        light_id_gt = torch.full((out['light_id_matrix'].shape[0], 1), float(1/int(self.config.model.lightid)), device=device)
-        loss_light = F.smooth_l1_loss(out['light_id_matrix'], light_id_gt)
-
-        # loss += loss_light
+        # light_pre = out['light_id_matrix'].mean()
+        light_pre = out['light_id_matrix']
+        light_id_gt = torch.full((light_pre.shape[0],1), float(1/int(self.config.model.lightid)), device=device)
+        # light_id_pre = torch.full((light_pre.shape[0],1), float(light_pre), device=device) 
+        loss_light = F.smooth_l1_loss(light_pre, light_id_gt)  
+        loss += loss_light
         # print("loss_light: ", loss_light)
         # print("loss_rgb: ", loss_rgb * self.C(self.config.system.loss.lambda_rgb))
 

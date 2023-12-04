@@ -13,14 +13,16 @@ class VolumeRadiance(nn.Module):
         super(VolumeRadiance, self).__init__()
         self.config = config
         self.n_dir_dims = self.config.get('n_dir_dims', 3)
-        self.n_output_dims = 3
+        self.n_output_dims = 4
+        # self.n_output_dims = 3
         encoding = get_encoding(self.n_dir_dims, self.config.dir_encoding_config)
 
         self.n_frequencies = 3
         self.n_masking_step = 0
         position_encoding = get_position_encoding(1, self.n_frequencies, self.n_masking_step)
 
-        self.n_input_dims = self.config.input_feature_dim + encoding.n_output_dims + 2 * self.n_frequencies
+        # self.n_input_dims = self.config.input_feature_dim + encoding.n_output_dims + 2 * self.n_frequencies
+        self.n_input_dims = self.config.input_feature_dim + encoding.n_output_dims 
         network = get_mlp(self.n_input_dims, self.n_output_dims, self.config.mlp_network_config)    
 
         self.encoding = encoding
@@ -37,13 +39,14 @@ class VolumeRadiance(nn.Module):
         # N, 2*self.n_frequencies
         lights_emd = self.position_encoding(lights.view(-1,1))
 
-        network_inp = torch.cat([features.view(-1, features.shape[-1]), dirs_embd, lights_emd] + [arg.view(-1, arg.shape[-1]) for arg in args], dim=-1)
-        # network_inp = torch.cat([features.view(-1, features.shape[-1]), dirs_embd] + [arg.view(-1, arg.shape[-1]) for arg in args], dim=-1)
+        # network_inp = torch.cat([features.view(-1, features.shape[-1]), dirs_embd, lights_emd] + [arg.view(-1, arg.shape[-1]) for arg in args], dim=-1)
+        network_inp = torch.cat([features.view(-1, features.shape[-1]), dirs_embd] + [arg.view(-1, arg.shape[-1]) for arg in args], dim=-1)
         # print("network_inp:", network_inp.shape)
 
         output = self.network(network_inp).view(*features.shape[:-1], self.n_output_dims).float()
-        color = output
-        light_id = lights
+        color = output[:, :3]
+        light_id = output[:, 3]
+        # light_id = lights
         # print("color:", color.shape)
         if 'color_activation' in self.config:
             color = get_activation(self.config.color_activation)(color)

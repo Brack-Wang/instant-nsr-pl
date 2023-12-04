@@ -66,7 +66,7 @@ def main():
 
     config['model']['lightid'] = args.lightid
     config['dataset']['lightid'] = args.lightid
-    dm = datasets.make(config.dataset.name, config.dataset)
+    dm = datasets.make(config.dataset.name, config.dataset, light_id)
     system = systems.make(config.system.name, config, load_from_checkpoint=None if not args.resume_weights_only else args.resume)
 
     callbacks = []

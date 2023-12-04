@@ -113,7 +113,7 @@ class NeRFModel(BaseModel):
         if positions.shape[0] != 0:
             density, feature = self.geometry(positions)
             rgb, light_id = self.texture(feature, t_dirs, self.config.lightid)
-            # light_id = light_id.unsqueeze(1)
+            light_id = light_id.unsqueeze(1)
         else:
             density = torch.zeros(0, device=positions.device)
             rgb = torch.zeros(0, 3, device=positions.device)
@@ -125,11 +125,10 @@ class NeRFModel(BaseModel):
         comp_rgb = accumulate_along_rays(weights, ray_indices, values=rgb, n_rays=n_rays)
         comp_rgb = comp_rgb + self.background_color * (1.0 - opacity)
 
-        # light = accumulate_along_rays(weights, ray_indices, values=light_id, n_rays=n_rays)
-
         # print("comp_rgb: ", comp_rgb.shape)
         # print("depth: ", depth.shape)
-        # print("light_id: ", light.shape)
+        # print("light_id: ", light_id.shape)
+        # print("rgb: ", rgb.shape)
         out = {
             'comp_rgb': comp_rgb,
             'opacity': opacity,

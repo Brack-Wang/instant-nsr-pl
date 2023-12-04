@@ -8,12 +8,17 @@ conda activate nsrpl
 # In ./configs/openill/nerf-oppo_r0.5.yaml, change the `root_dir`, `img_downscale`(suggest 2), `lightid`
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid 1
 
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume exp/nerf-oppo-r0.5-obj_02_egg/train_1/ckpt/epoch=0-step=2501.ckpt --resume_weights_only --lightid 4
+
+python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_1/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_1_4/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid 1
+
+
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid 4
 
 # Load checkpoint
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume pth_to_ckpt --resume_weights_only
 
-python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/insertid_pe_16/train_1_4/ckpt/epoch=0-step=2501.ckpt --resume_weights_only --lightid 6
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume exp/nerf-oppo-r0.5-obj_02_egg/train_1/ckpt/epoch=0-step=2501.ckpt --resume_weights_only --lightid 4
 
 ```
 
@@ -24,7 +29,7 @@ The training procedure are by default followed by testing, which computes metric
 python launch.py --config path/to/your/exp/config/parsed.yaml --resume path/to/your/exp/ckpt/epoch=0-step=20000.ckpt --gpu 0 --test
 
 
-python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/insertid_pe_16/train_1/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/insertid_pe_16/train_1_4_6/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid 1
+python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/extra_output_seperate/train_1/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/extra_output_seperate/train_1_4/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid 1
 ```
 
 # Environment Setting

@@ -38,6 +38,33 @@ class VanillaFrequency(nn.Module):
             rank_zero_debug(f'Update mask: {global_step}/{self.n_masking_step} {self.mask}')
 
 
+class PositionEncoding(nn.Module):
+    def __init__(self, in_channels, n_frequencies, n_masking_step):
+        super().__init__()
+        self.N_freqs = n_frequencies
+        self.in_channels, self.n_input_dims = in_channels, in_channels
+        self.funcs = [torch.sin, torch.cos]
+        self.freq_bands = 2 ** torch.linspace(0, self.N_freqs - 1, self.N_freqs)
+        self.n_output_dims = self.in_channels * (len(self.funcs) * self.N_freqs)
+        self.n_masking_step = n_masking_step
+        self.update_step(None, None)  # mask should be updated at the beginning each step
+
+    def forward(self, x):
+        out = []
+        for freq, mask in zip(self.freq_bands, self.mask):
+            for func in self.funcs:
+                out += [func(freq * x) * mask]
+        return torch.cat(out, -1)
+
+    def update_step(self, epoch, global_step):
+        if self.n_masking_step <= 0 or global_step is None:
+            self.mask = torch.ones(self.N_freqs, dtype=torch.float32)
+        else:
+            self.mask = (1. - torch.cos(math.pi * (global_step / self.n_masking_step * self.N_freqs - torch.arange(0, self.N_freqs)).clamp(0, 1))) / 2.
+            rank_zero_debug(f'Update mask: {global_step}/{self.n_masking_step} {self.mask}')
+
+
+
 class ProgressiveBandHashGrid(nn.Module):
     def __init__(self, in_channels, config):
         super().__init__()
@@ -90,10 +117,15 @@ def get_encoding(n_input_dims, config):
         with torch.cuda.device(get_rank()):
             print("config_to_primitive(config): ", config_to_primitive(config))
             encoding = tcnn.Encoding(n_input_dims, config_to_primitive(config))
-    print("encoding: ", encoding.shape)
     encoding = CompositeEncoding(encoding, include_xyz=config.get('include_xyz', False), xyz_scale=2., xyz_offset=-1.)
-    print("encoding: ", encoding.shape)
 
+    return encoding
+
+
+def get_position_encoding(n_input_dims, n_frequencies, n_masking_step):
+    # input suppose to be range [0, 1]
+    encoding = PositionEncoding(n_input_dims, n_frequencies, n_masking_step)
+    encoding = CompositeEncoding(encoding, include_xyz=False, xyz_scale=2., xyz_offset=-1.)
     return encoding
 
 

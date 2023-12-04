@@ -1,5 +1,5 @@
 import math
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -112,10 +112,12 @@ class NeRFModel(BaseModel):
         intervals = t_ends - t_starts
         if positions.shape[0] != 0:
             density, feature = self.geometry(positions)
-            rgb = self.texture(feature, t_dirs, self.config.lightid)
+            rgb, light_id = self.texture(feature, t_dirs, self.config.lightid)
+            # light_id = light_id.unsqueeze(1)
         else:
             density = torch.zeros(0, device=positions.device)
             rgb = torch.zeros(0, 3, device=positions.device)
+            light_id = torch.zeros(0, device=positions.device)
 
         weights = render_weight_from_density(t_starts, t_ends, density[..., None], ray_indices=ray_indices, n_rays=n_rays)
         opacity = accumulate_along_rays(weights, ray_indices, values=None, n_rays=n_rays)
@@ -123,12 +125,18 @@ class NeRFModel(BaseModel):
         comp_rgb = accumulate_along_rays(weights, ray_indices, values=rgb, n_rays=n_rays)
         comp_rgb = comp_rgb + self.background_color * (1.0 - opacity)
 
+        # light = accumulate_along_rays(weights, ray_indices, values=light_id, n_rays=n_rays)
+
+        # print("comp_rgb: ", comp_rgb.shape)
+        # print("depth: ", depth.shape)
+        # print("light_id: ", light.shape)
         out = {
             'comp_rgb': comp_rgb,
             'opacity': opacity,
             'depth': depth,
             'rays_valid': opacity > 0,
-            'num_samples': torch.as_tensor([len(t_starts)], dtype=torch.int32, device=rays.device)
+            'num_samples': torch.as_tensor([len(t_starts)], dtype=torch.int32, device=rays.device),
+            'light_id_matrix': light_id
         }
 
         if self.training:

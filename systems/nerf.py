@@ -97,6 +97,14 @@ class NeRFSystem(BaseSystem):
         self.log('train/loss_rgb', loss_rgb)
         loss += loss_rgb * self.C(self.config.system.loss.lambda_rgb)
 
+        device = out['light_id_matrix'].device  
+        light_id_gt = torch.full((out['light_id_matrix'].shape[0], 1), float(1/int(self.config.model.lightid)), device=device)
+        loss_light = F.smooth_l1_loss(out['light_id_matrix'], light_id_gt)
+
+        # loss += loss_light
+        # print("loss_light: ", loss_light)
+        # print("loss_rgb: ", loss_rgb * self.C(self.config.system.loss.lambda_rgb))
+
         # distortion loss proposed in MipNeRF360
         # an efficient implementation from https://github.com/sunset1995/torch_efficient_distloss, but still slows down training by ~30%
         if self.C(self.config.system.loss.lambda_distortion) > 0:

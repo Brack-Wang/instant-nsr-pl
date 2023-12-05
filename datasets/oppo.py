@@ -27,8 +27,8 @@ class OppoDatasetBase():
 
         self.has_mask = True
         self.apply_mask = True
-        self.lightid = str(self.config.lightid).zfill(3)
-        print(" self.lightid ",  self.lightid )
+        self.lightid = 0 
+        
         # with open(os.path.join(self.config.root_dir, f"transforms_{self.split}.new.json"), 'r') as f:
         with open(os.path.join(self.config.root_dir, f"transforms_{self.split}.json"), 'r') as f:
             self.meta = json.load(f)['frames']
@@ -55,7 +55,7 @@ class OppoDatasetBase():
         #     get_ray_directions(self.w, self.h, self.focal, self.focal, self.w // 2, self.h // 2).to(
         #         self.rank)  # (h, w, 3)
         self.directions = []
-        self.all_c2w, self.all_images, self.all_fg_masks = [], [], []
+        self.all_c2w, self.all_images, self.all_fg_masks, self.all_light = [], [], [], []
         wis3d = Wis3D(
             xyz_pattern=('x', 'y', 'z'),
             out_folder="dbg",
@@ -65,35 +65,41 @@ class OppoDatasetBase():
         )
         blender2opencv = np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
 
-        for k, v in self.meta.items():
-            imgid = v['file_path'].split('/')[-1]
-            focal = 0.5 * v['calib_imgw'] / np.tan(0.5 * v['camera_angle_x'])  # original focal length
-            focal = focal * self.w / v['calib_imgw']
-            directions = \
-                get_ray_directions(self.w, self.h, focal, focal, self.w // 2, self.h // 2).to(self.rank)  # (h, w, 3)
-            self.directions.append(directions)
-            c2w = np.array(v['transform_matrix'])
-            c2w = c2w @ np.linalg.inv(blender2opencv)
-            c2w = torch.FloatTensor(c2w)[:3, :4]
-            self.all_c2w.append(c2w)
-            wis3d.add_camera_trajectory(torch.cat([c2w, torch.tensor([[0, 0, 0, 1]])], dim=0)[None])
-            img_path = os.path.join(self.config.root_dir, f"../Lights/{self.lightid}/raw_undistorted/{imgid}.JPG")
-            img = Image.open(img_path)
-            img = img.resize(self.img_wh, Image.BICUBIC)
-            img = TF.to_tensor(img).permute(1, 2, 0)  # (4, h, w) => (h, w, 4)
-            if self.split == 'train':
-                mask_path = os.path.join(self.config.root_dir, f"com_masks/{imgid}.png")
-            else:
-                mask_path = os.path.join(self.config.root_dir, f"obj_masks/{imgid}.png")
-            mask = cv2.imread(mask_path, 2) > 0
-            mask = cv2.resize(mask.astype(np.uint8), self.img_wh, interpolation=cv2.INTER_NEAREST) > 0
-            self.all_fg_masks.append(torch.from_numpy(mask).float())  # (h, w)
-            self.all_images.append(img[..., :3])
+        
+        for light_number in range(len(self.config.lightid)):
+            self.lightid = str(self.config.lightid[light_number]).zfill(3)
+            print(" self.lightid ",  self.lightid )
+            for k, v in self.meta.items():
+                imgid = v['file_path'].split('/')[-1]
+                focal = 0.5 * v['calib_imgw'] / np.tan(0.5 * v['camera_angle_x'])  # original focal length
+                focal = focal * self.w / v['calib_imgw']
+                directions = \
+                    get_ray_directions(self.w, self.h, focal, focal, self.w // 2, self.h // 2).to(self.rank)  # (h, w, 3)
+                self.directions.append(directions)
+                c2w = np.array(v['transform_matrix'])
+                c2w = c2w @ np.linalg.inv(blender2opencv)
+                c2w = torch.FloatTensor(c2w)[:3, :4]
+                self.all_c2w.append(c2w)
+                self.all_light.append(torch.tensor(int(self.lightid)))
+                wis3d.add_camera_trajectory(torch.cat([c2w, torch.tensor([[0, 0, 0, 1]])], dim=0)[None])
+                img_path = os.path.join(self.config.root_dir, f"../Lights/{self.lightid}/raw_undistorted/{imgid}.JPG")
+                img = Image.open(img_path)
+                img = img.resize(self.img_wh, Image.BICUBIC)
+                img = TF.to_tensor(img).permute(1, 2, 0)  # (4, h, w) => (h, w, 4)
+                if self.split == 'train':
+                    mask_path = os.path.join(self.config.root_dir, f"com_masks/{imgid}.png")
+                else:
+                    mask_path = os.path.join(self.config.root_dir, f"obj_masks/{imgid}.png")
+                mask = cv2.imread(mask_path, 2) > 0
+                mask = cv2.resize(mask.astype(np.uint8), self.img_wh, interpolation=cv2.INTER_NEAREST) > 0
+                self.all_fg_masks.append(torch.from_numpy(mask).float())  # (h, w)
+                self.all_images.append(img[..., :3])
         self.directions = torch.stack(self.directions, dim=0)
-        self.all_c2w, self.all_images, self.all_fg_masks = \
+        self.all_c2w, self.all_images, self.all_fg_masks, self.all_light = \
             torch.stack(self.all_c2w, dim=0).float().to(self.rank), \
             torch.stack(self.all_images, dim=0).float().to(self.rank), \
-            torch.stack(self.all_fg_masks, dim=0).float().to(self.rank)
+            torch.stack(self.all_fg_masks, dim=0).float().to(self.rank), \
+            torch.stack(self.all_light, dim=0).float().to(self.rank)
 
 
 class OppoDataset(Dataset, OppoDatasetBase):

@@ -5,12 +5,17 @@
 ```bash
 conda activate nsrpl
 # change the `dataset.scene` in the command
-# In ./configs/openill/nerf-oppo_r0.5.yaml, change the `root_dir`, `img_downscale`(suggest 2), `lightid`
-python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid 1
 
-python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume exp/nerf-oppo-r0.5-obj_02_egg/train_1/ckpt/epoch=0-step=2501.ckpt --resume_weights_only --lightid 4
+python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid "[2, 5]"
 
-python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_1/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_1_4/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid 1
+python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_5/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_2_5/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid "[5]"
+
+python launch.py --config /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_2/config/parsed.yaml --resume /home/ubuntu/frozen_density/instant-nsr-pl/exp/nerf-oppo-r0.5-obj_02_egg/train_2_5/ckpt/epoch=0-step=2501.ckpt --gpu 0 --test --lightid "[2]"
+
+
+
+
+
 
 
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --lightid 4

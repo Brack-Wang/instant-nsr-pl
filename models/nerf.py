@@ -17,11 +17,6 @@ class NeRFModel(BaseModel):
         self.geometry = models.make(self.config.geometry.name, self.config.geometry)
         self.frozen = False
 
-        # Freeze geometry parameters
-        if self.frozen == True:
-            print("frozen geometry")
-            for param in self.geometry.parameters():
-                param.requires_grad = False
         self.texture = models.make(self.config.texture.name, self.config.texture)
         self.register_buffer('scene_aabb', torch.as_tensor([-self.config.radius, -self.config.radius, -self.config.radius, self.config.radius, self.config.radius, self.config.radius], dtype=torch.float32))
 
@@ -37,6 +32,8 @@ class NeRFModel(BaseModel):
             self.cone_angle = 0.0
             self.render_step_size = 1.732 * 2 * self.config.radius / self.config.num_samples_per_ray
             self.contraction_type = ContractionType.AABB
+        
+        self.img_light_all = None
 
         self.geometry.contraction_type = self.contraction_type
 
@@ -50,10 +47,9 @@ class NeRFModel(BaseModel):
         self.background_color = None
 
     def update_step(self, epoch, global_step):
-        # Freeze geometry parameters
-        if self.frozen == True:
-            for param in self.geometry.parameters():
-                param.requires_grad = False
+        # if global_step > 100:   
+        #     for param in self.geometry.parameters():
+        #         param.requires_grad = False
             
         update_module_step(self.geometry, epoch, global_step)
         update_module_step(self.texture, epoch, global_step)
@@ -70,9 +66,10 @@ class NeRFModel(BaseModel):
         mesh = self.geometry.isosurface()
         return mesh
 
-    def forward_(self, rays):
+    def forward_(self, rays, img_light):
         n_rays = rays.shape[0]
         rays_o, rays_d = rays[:, 0:3], rays[:, 3:6]  # both (N_rays, 3)
+        self.first_light = int(img_light[0][0].item())
 
         def sigma_fn(t_starts, t_ends, ray_indices):
             ray_indices = ray_indices.long()
@@ -112,7 +109,7 @@ class NeRFModel(BaseModel):
         intervals = t_ends - t_starts
         if positions.shape[0] != 0:
             density, feature = self.geometry(positions)
-            rgb, light_id = self.texture(feature, t_dirs, self.config.lightid)
+            rgb, light_id = self.texture(feature, t_dirs, int(img_light[0]))
             light_id = light_id.unsqueeze(1)
         else:
             density = torch.zeros(0, device=positions.device)
@@ -135,7 +132,8 @@ class NeRFModel(BaseModel):
             'depth': depth,
             'rays_valid': opacity > 0,
             'num_samples': torch.as_tensor([len(t_starts)], dtype=torch.int32, device=rays.device),
-            'light_id_matrix': light_id
+            'light_id_matrix': light_id,
+            'light_id_gt': img_light,
         }
 
         if self.training:
@@ -148,11 +146,17 @@ class NeRFModel(BaseModel):
 
         return out
 
-    def forward(self, rays):
+    def forward(self, rays, img_light):
+        self.img_light_all = img_light.unsqueeze(1)
         if self.training:
-            out = self.forward_(rays)
+            out = self.forward_(rays, self.img_light_all)
         else:
-            out = chunk_batch(self.forward_, self.config.ray_chunk, True, rays)
+            # print("rays: ", rays.shape)
+            # print("self.img_light_all[0][0].item(): ", type(self.img_light_all[0][0].item()))
+            self.img_light_all = torch.full((rays.shape[0], 1), self.img_light_all[0][0].item(), device=self.img_light_all[0][0].device)
+            # print("self.img_light_all: ", self.img_light_all.shape)
+
+            out = chunk_batch(self.forward_, self.config.ray_chunk, True, rays, self.img_light_all)
         return {
             **out,
         }

@@ -25,7 +25,7 @@ class NeRFSystem(BaseSystem):
         self.train_num_rays = self.config.model.train_num_rays
 
     def forward(self, batch):
-        return self.model(batch['rays'])
+        return self.model(batch['rays'], batch['img_light'])
 
     def preprocess_data(self, batch, stage):
         if 'index' in batch:  # validation / testing
@@ -51,6 +51,7 @@ class NeRFSystem(BaseSystem):
             rays_o, rays_d = get_rays(directions, c2w)
             rgb = self.dataset.all_images[index, y, x].view(-1, self.dataset.all_images.shape[-1])
             fg_mask = self.dataset.all_fg_masks[index, y, x].view(-1)
+            img_light = self.dataset.all_light[index].view(-1)
         else:
             c2w = self.dataset.all_c2w[index][0]
             if self.dataset.directions.ndim == 3:  # (H, W, 3)
@@ -60,6 +61,7 @@ class NeRFSystem(BaseSystem):
             rays_o, rays_d = get_rays(directions, c2w)
             rgb = self.dataset.all_images[index].view(-1, self.dataset.all_images.shape[-1])
             fg_mask = self.dataset.all_fg_masks[index].view(-1)
+            img_light = self.dataset.all_light[index].view(-1)
 
         rays = torch.cat([rays_o, F.normalize(rays_d, p=2, dim=-1)], dim=-1)
 
@@ -76,10 +78,13 @@ class NeRFSystem(BaseSystem):
         if self.dataset.apply_mask:
             rgb = rgb * fg_mask[..., None] + self.model.background_color * (1 - fg_mask[..., None])
 
+        self.image_name = img_light[0]
+
         batch.update({
             'rays': rays,
             'rgb': rgb,
-            'fg_mask': fg_mask
+            'fg_mask': fg_mask,
+            "img_light": img_light
         })
 
     def training_step(self, batch, batch_idx):
@@ -97,13 +102,21 @@ class NeRFSystem(BaseSystem):
         self.log('train/loss_rgb', loss_rgb)
         loss += loss_rgb * self.C(self.config.system.loss.lambda_rgb)
 
+        # if not extra_output dimension to predict lighting condition, loss_light is 0
         device = out['light_id_matrix'].device  
-        # light_pre = out['light_id_matrix'].mean()
         light_pre = out['light_id_matrix']
-        light_id_gt = torch.full((light_pre.shape[0],1), float(1/int(self.config.model.lightid)), device=device)
-        # light_id_pre = torch.full((light_pre.shape[0],1), float(light_pre), device=device) 
-        loss_light = F.smooth_l1_loss(light_pre, light_id_gt)  
+        if light_pre[0] == 0:
+            loss_light = 0
+        else:
+            light_gt_id =  float(1/int(batch['img_light'][0]))
+            light_id_gt = torch.full((light_pre.shape[0],1), light_gt_id, device=device)
+            loss_light = F.smooth_l1_loss(light_pre, light_id_gt) / 10
+        print(loss_light)
+
         loss += loss_light
+
+        self.image_name = batch['img_light'][0]
+
         # print("loss_light: ", loss_light)
         # print("loss_rgb: ", loss_rgb * self.C(self.config.system.loss.lambda_rgb))
 
@@ -146,7 +159,7 @@ class NeRFSystem(BaseSystem):
         out = self(batch)
         psnr = self.criterions['psnr'](out['comp_rgb'].to(batch['rgb']), batch['rgb'])
         W, H = self.dataset.img_wh
-        self.save_image_grid(f"lighting{self.config.model.lightid}-it{self.global_step}-{batch['index'][0].item()}.png", [
+        self.save_image_grid(f"lighting{out['light_id_gt'][0][0]}-it{self.global_step}-{batch['index'][0].item()}.png", [
             {'type': 'rgb', 'img': batch['rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'rgb', 'img': out['comp_rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'grayscale', 'img': out['depth'].view(H, W), 'kwargs': {}},
@@ -182,7 +195,7 @@ class NeRFSystem(BaseSystem):
         out = self(batch)
         psnr = self.criterions['psnr'](out['comp_rgb'].to(batch['rgb']), batch['rgb'])
         W, H = self.dataset.img_wh
-        self.save_image_grid(f"lighting{self.config.model.lightid}-it{self.global_step}-test/{batch['index'][0].item()}.png", [
+        self.save_image_grid(f"lighting{out['light_id_gt'][0][0]}-it{self.global_step}-test/{batch['index'][0].item()}.png", [
             {'type': 'rgb', 'img': batch['rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'rgb', 'img': out['comp_rgb'].view(H, W, 3), 'kwargs': {'data_format': 'HWC'}},
             {'type': 'grayscale', 'img': out['depth'].view(H, W), 'kwargs': {}},
@@ -207,10 +220,10 @@ class NeRFSystem(BaseSystem):
                         out_set[index[0].item()] = {'psnr': step_out['psnr'][oi]}
             psnr = torch.mean(torch.stack([o['psnr'] for o in out_set.values()]))
             self.log('test/psnr', psnr, prog_bar=True, rank_zero_only=True)
-
+            # print("out['light_id_gt'][0][0]", out['light_id_gt'] )
             self.save_img_sequence(
-                f"lighting{self.config.model.lightid}-it{self.global_step}-test",
-                f"lighting{self.config.model.lightid}-it{self.global_step}-test",
+                f"lighting{self.image_name}-it{self.global_step}-test",
+                f"lighting{self.image_name}-it{self.global_step}-test",
                 '(\d+)\.png',
                 save_format='mp4',
                 fps=30
@@ -221,6 +234,6 @@ class NeRFSystem(BaseSystem):
     def export(self):
         mesh = self.model.export(self.config.export)
         self.save_mesh(
-            f"lighting{self.config.model.lightid}-it{self.global_step}-{self.config.model.geometry.isosurface.method}{self.config.model.geometry.isosurface.resolution}.obj",
+            f"lighting{self.image_name}-it{self.global_step}-{self.config.model.geometry.isosurface.method}{self.config.model.geometry.isosurface.resolution}.obj",
             **mesh
         )

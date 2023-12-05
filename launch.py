@@ -4,7 +4,7 @@ import os
 import time
 import logging
 from datetime import datetime
-
+import ast
 
 def main():
     parser = argparse.ArgumentParser()
@@ -64,9 +64,11 @@ def main():
         config.seed = int(time.time() * 1000) % 1000
     pl.seed_everything(config.seed)
 
-    config['model']['lightid'] = args.lightid
-    config['dataset']['lightid'] = args.lightid
-    dm = datasets.make(config.dataset.name, config.dataset, light_id)
+    lightid = ast.literal_eval(args.lightid)
+    config['model']['lightid'] = lightid
+    config['dataset']['lightid'] = lightid
+
+    dm = datasets.make(config.dataset.name, config.dataset)
     system = systems.make(config.system.name, config, load_from_checkpoint=None if not args.resume_weights_only else args.resume)
 
     callbacks = []

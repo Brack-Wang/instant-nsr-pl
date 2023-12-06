@@ -116,6 +116,7 @@ class BaseSystem(pl.LightningModule, SaverMixin):
         raise NotImplementedError
 
     def configure_optimizers(self):
+        print("self.config.system.optimizer!", self.config.system.optimizer)
         optim = parse_optimizer(self.config.system.optimizer, self.model)
         ret = {
             'optimizer': optim,

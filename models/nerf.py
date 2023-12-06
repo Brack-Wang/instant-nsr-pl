@@ -18,6 +18,7 @@ class NeRFModel(BaseModel):
         self.frozen = False
 
         self.texture = models.make(self.config.texture.name, self.config.texture)
+        # self.scalar = models.make(self.config.scalar.name, self.config.scalar)
         self.register_buffer('scene_aabb', torch.as_tensor([-self.config.radius, -self.config.radius, -self.config.radius, self.config.radius, self.config.radius, self.config.radius], dtype=torch.float32))
 
         if self.config.learned_background:
@@ -47,10 +48,11 @@ class NeRFModel(BaseModel):
         self.background_color = None
 
     def update_step(self, epoch, global_step):
-        # if global_step > 100:   
+            
+        # if global_step > 100:
         #     for param in self.geometry.parameters():
         #         param.requires_grad = False
-            
+
         update_module_step(self.geometry, epoch, global_step)
         update_module_step(self.texture, epoch, global_step)
 
@@ -109,7 +111,7 @@ class NeRFModel(BaseModel):
         intervals = t_ends - t_starts
         if positions.shape[0] != 0:
             density, feature = self.geometry(positions)
-            rgb, light_id = self.texture(feature, t_dirs, int(img_light[0]))
+            rgb, light_id = self.texture(feature, t_dirs, int(img_light[0]), positions)
             light_id = light_id.unsqueeze(1)
         else:
             density = torch.zeros(0, device=positions.device)

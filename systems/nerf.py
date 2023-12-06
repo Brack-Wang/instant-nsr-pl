@@ -111,7 +111,6 @@ class NeRFSystem(BaseSystem):
             light_gt_id =  float(1/int(batch['img_light'][0]))
             light_id_gt = torch.full((light_pre.shape[0],1), light_gt_id, device=device)
             loss_light = F.smooth_l1_loss(light_pre, light_id_gt) / 10
-        print(loss_light)
 
         loss += loss_light
 

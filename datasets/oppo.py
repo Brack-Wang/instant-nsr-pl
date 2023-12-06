@@ -100,6 +100,7 @@ class OppoDatasetBase():
             torch.stack(self.all_images, dim=0).float().to(self.rank), \
             torch.stack(self.all_fg_masks, dim=0).float().to(self.rank), \
             torch.stack(self.all_light, dim=0).float().to(self.rank)
+        print("self.all_light: ", self.all_light)
 
 
 class OppoDataset(Dataset, OppoDatasetBase):

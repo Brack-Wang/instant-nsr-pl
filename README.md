@@ -5,7 +5,6 @@ To implement our method, please follow the instructions in the Environment secti
 
 ## Structure
 
-
 ### Train the model
 
 ```bash

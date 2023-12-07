@@ -18,7 +18,6 @@ class NeRFModel(BaseModel):
         self.frozen = False
 
         self.texture = models.make(self.config.texture.name, self.config.texture)
-        # self.scalar = models.make(self.config.scalar.name, self.config.scalar)
         self.register_buffer('scene_aabb', torch.as_tensor([-self.config.radius, -self.config.radius, -self.config.radius, self.config.radius, self.config.radius, self.config.radius], dtype=torch.float32))
 
         if self.config.learned_background:

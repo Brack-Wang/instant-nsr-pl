@@ -18,9 +18,8 @@ class VolumeRadiance(nn.Module):
         # whether to add extra input
         self.extra_input = True
         # whether to add position as input, note open extra_input
-        self.position_input = True
-        self.v5 = False
-        self.n_frequencies = 5
+        self.position_input = False
+        self.n_frequencies = 8
         self.n_masking_step = 0
 
         if self.extra_output == True:
@@ -40,16 +39,11 @@ class VolumeRadiance(nn.Module):
                 print("extra input")
         else:
             self.n_input_dims = self.config.input_feature_dim + encoding.n_output_dims 
-        network = get_mlp(self.n_input_dims, self.n_output_dims, self.config.mlp_network_config)   
-
-        self.n_input_dims_o = 2 * self.n_frequencies + 3
-        self.n_output_dims_o = 1
-        # network_o = get_mlp(self.n_input_dims_o, self.n_output_dims_o, self.config.mlp_network_config)    
+        network = get_mlp(self.n_input_dims, self.n_output_dims, self.config.mlp_network_config)    
 
         self.encoding = encoding
         self.position_encoding = position_encoding
         self.network = network
-        # self.network_o = network_o
     
     def forward(self, features, dirs, lightid, positions, *args):
 
@@ -74,15 +68,6 @@ class VolumeRadiance(nn.Module):
             network_inp = torch.cat([features.view(-1, features.shape[-1]), dirs_embd] + [arg.view(-1, arg.shape[-1]) for arg in args], dim=-1)
 
         output = self.network(network_inp).view(*features.shape[:-1], self.n_output_dims).float()
-        
-        # if self.v5 == True:
-        #     network_inp_o = torch.cat([lights_emd, positions] + [arg.view(-1, arg.shape[-1]) for arg in args], dim=-1)
-        #     o = self.network_o(network_inp_o).view(*features.shape[:-1], self.n_output_dims_o).float()
-        #     print("o", o.shape)
-        #     print("lights_emd", lights_emd.shape)
-        # else:
-        #     o = torch.tensor([0], device=device)
-
         color = output[:, :3]
         if self.extra_output == True:
             light_id = output[:, 3]

@@ -1,11 +1,23 @@
 # Train and Test
-This project is the implementation of Instant-NGP on OpenIllumilation dataset and render same scence under different lighting conditions with same model. 
+This project is the implementation of Instant-NGP on [OpenIllumilation](https://oppo-us-research.github.io/OpenIllumination/) dataset and render same scence under different lighting conditions with same model. 
 
 To implement our method, please follow the instructions in the Environment section to download the code, dataset, and setting environment. Our method is built based on [instant-nsr-pl](https://github.com/bennyguo/instant-nsr-pl).
 
 ## Structure
-
-### Train the model
+```
+-- configs: the configuration of model and data path
+|
+-- datasets: read prepross data
+|
+-- models: NeRF model
+|
+-- systems: training process
+|
+-- launch.py: the launch script
+|
+-- open_illumination.py": script to download dataset
+```
+## Train the model
 
 ```bash
 conda activate nsrpl
@@ -19,7 +31,7 @@ python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train da
 python launch.py --config configs/openill/nerf-oppo_r0.5.yaml --gpu 0 --train dataset.scene=obj_02_egg tag=example --resume pth_to_ckpt --resume_weights_only --lightid "[1, 4]"
 ```
 
-### Testing
+## Test the model
 The training procedure are by default followed by testing, which computes metrics on test data, generates animations and exports the geometry as triangular meshes. If you want to do testing alone, just resume the pretrained model and replace `--train` with `--test`, for example:
 
 ```bash
